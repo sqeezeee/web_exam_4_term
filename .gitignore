@@ -20,10 +20,6 @@ instance/
 # Переменные окружения
 .env
 
-# Загруженные обложки
-static/uploads/*
-!static/uploads/.gitkeep
-
 # IDE
 .idea/
 .vscode/
