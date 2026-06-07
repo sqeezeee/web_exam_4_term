@@ -1,0 +1,60 @@
+{# Макрос общей формы добавления/редактирования книги #}
+{% macro book_form(genres, form_data, is_create=false) %}
+  <div class="mb-3">
+    <label for="title" class="form-label">Название</label>
+    <input type="text" class="form-control" id="title" name="title"
+           value="{{ form_data.get('title', '') }}" required>
+  </div>
+
+  <div class="mb-3">
+    <label for="description" class="form-label">Краткое описание (Markdown)</label>
+    <textarea class="form-control" id="description" name="description" rows="8">{{ form_data.get('description', '') }}</textarea>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label for="year" class="form-label">Год</label>
+      <input type="number" class="form-control" id="year" name="year"
+             value="{{ form_data.get('year', '') }}" min="1000" max="2100" required>
+    </div>
+    <div class="col-md-4 mb-3">
+      <label for="pages" class="form-label">Объём (страниц)</label>
+      <input type="number" class="form-control" id="pages" name="pages"
+             value="{{ form_data.get('pages', '') }}" min="1" required>
+    </div>
+    <div class="col-md-4 mb-3">
+      <label for="publisher" class="form-label">Издательство</label>
+      <input type="text" class="form-control" id="publisher" name="publisher"
+             value="{{ form_data.get('publisher', '') }}" required>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label for="author" class="form-label">Автор</label>
+    <input type="text" class="form-control" id="author" name="author"
+           value="{{ form_data.get('author', '') }}" required>
+  </div>
+
+  <div class="mb-3">
+    <label for="genre_ids" class="form-label">Жанры</label>
+    <select class="form-select" id="genre_ids" name="genre_ids" multiple required size="5">
+      {% set selected = form_data.get('genre_ids', []) %}
+      {% for genre in genres %}
+        <option value="{{ genre.id }}" {% if genre.id in selected %}selected{% endif %}>
+          {{ genre.name }}
+        </option>
+      {% endfor %}
+    </select>
+    <div class="form-text">Удерживайте Ctrl (Cmd на Mac) для выбора нескольких жанров</div>
+  </div>
+
+  {% if is_create %}
+    <div class="mb-3">
+      <label for="cover" class="form-label">Обложка</label>
+      <input type="file" class="form-control" id="cover" name="cover" accept="image/*" required>
+    </div>
+  {% endif %}
+
+  <button type="submit" class="btn btn-primary">Сохранить</button>
+  <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Отмена</a>
+{% endmacro %}

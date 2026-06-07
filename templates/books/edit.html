@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "macros/book_form.html" import book_form %}
+
+{% block title %}Редактировать «{{ book.title }}» — Электронная библиотека{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Редактирование книги</h1>
+
+<form method="POST">
+  {{ book_form(genres, form_data, is_create=false) }}
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/easymde-form.js') }}"></script>
+<script>
+  initEasyMDE("description");
+</script>
+{% endblock %}

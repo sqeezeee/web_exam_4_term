@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Каталог книг — Электронная библиотека{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Каталог книг</h1>
+
+{# Форма поиска (вариант 3) — GET, чтобы фильтры сохранялись при пагинации #}
+<div class="card mb-4">
+  <div class="card-header">Поиск книг</div>
+  <div class="card-body">
+    <form method="GET" action="{{ url_for('main.index') }}">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label for="title" class="form-label">Название</label>
+          <input type="text" class="form-control" id="title" name="title"
+                 value="{{ filters.title }}">
+        </div>
+        <div class="col-md-6">
+          <label for="author" class="form-label">Автор</label>
+          <input type="text" class="form-control" id="author" name="author"
+                 value="{{ filters.author }}">
+        </div>
+        <div class="col-md-6">
+          <label for="genre_ids" class="form-label">Жанр</label>
+          <select class="form-select" id="genre_ids" name="genre_ids" multiple size="4">
+            {% for genre in genres %}
+              <option value="{{ genre.id }}"
+                {% if genre.id in filters.genre_ids %}selected{% endif %}>
+                {{ genre.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label for="years" class="form-label">Год</label>
+          <select class="form-select" id="years" name="years" multiple size="4">
+            {% for year in years %}
+              <option value="{{ year }}"
+                {% if year in filters.years %}selected{% endif %}>
+                {{ year }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="pages_from" class="form-label">Объём от</label>
+          <input type="number" class="form-control" id="pages_from" name="pages_from"
+                 value="{{ filters.pages_from }}" min="1">
+        </div>
+        <div class="col-md-3">
+          <label for="pages_to" class="form-label">Объём до</label>
+          <input type="number" class="form-control" id="pages_to" name="pages_to"
+                 value="{{ filters.pages_to }}" min="1">
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary">Найти</button>
+          <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">Сбросить</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if books %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Название</th>
+          <th>Жанры</th>
+          <th>Год</th>
+          <th>Средняя оценка</th>
+          <th>Рецензий</th>
+          <th class="text-end">Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for book in books %}
+          <tr>
+            <td>{{ book.title }}</td>
+            <td>
+              {% for genre in book.genres %}
+                <span class="badge bg-secondary">{{ genre.name }}</span>
+              {% endfor %}
+            </td>
+            <td>{{ book.year }}</td>
+            <td>
+              {% if book.average_rating is not none %}
+                {{ book.average_rating }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td>{{ book.reviews_count }}</td>
+            <td class="text-end text-nowrap">
+              <a href="{{ url_for('books.detail', book_id=book.id) }}"
+                 class="btn btn-sm btn-outline-primary" title="Просмотр">
+                <i class="bi bi-eye"></i>
+              </a>
+              {% if current_user.is_authenticated and current_user.has_role('administrator', 'moderator') %}
+                <a href="{{ url_for('books.edit', book_id=book.id) }}"
+                   class="btn btn-sm btn-outline-warning" title="Редактирование">
+                  <i class="bi bi-pencil"></i>
+                </a>
+              {% endif %}
+              {% if current_user.is_authenticated and current_user.has_role('administrator') %}
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                        title="Удалить"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteModal{{ book.id }}">
+                  <i class="bi bi-trash"></i>
+                </button>
+              {% endif %}
+            </td>
+          </tr>
+
+          {# Модальное окно подтверждения удаления #}
+          <div class="modal fade" id="deleteModal{{ book.id }}" tabindex="-1">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Удаление книги</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                  Вы уверены, что хотите удалить книгу «{{ book.title }}»?
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Нет</button>
+                  <form method="POST" action="{{ url_for('books.delete', book_id=book.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Да</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {# Пагинация с сохранением параметров поиска #}
+  {% if pagination.pages > 1 %}
+    <nav aria-label="Навигация по страницам">
+      <ul class="pagination justify-content-center">
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+          <a class="page-link"
+             href="{{ url_for('main.index', page=pagination.prev_num, title=filters.title, author=filters.author, pages_from=filters.pages_from, pages_to=filters.pages_to, genre_ids=filters.genre_ids, years=filters.years) if pagination.has_prev else '#' }}">
+            Назад
+          </a>
+        </li>
+        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+          {% if p %}
+            <li class="page-item {% if p == pagination.page %}active{% endif %}">
+              <a class="page-link"
+                 href="{{ url_for('main.index', page=p, title=filters.title, author=filters.author, pages_from=filters.pages_from, pages_to=filters.pages_to, genre_ids=filters.genre_ids, years=filters.years) }}">
+                {{ p }}
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+          {% endif %}
+        {% endfor %}
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+          <a class="page-link"
+             href="{{ url_for('main.index', page=pagination.next_num, title=filters.title, author=filters.author, pages_from=filters.pages_from, pages_to=filters.pages_to, genre_ids=filters.genre_ids, years=filters.years) if pagination.has_next else '#' }}">
+            Вперёд
+          </a>
+        </li>
+      </ul>
+    </nav>
+  {% endif %}
+{% else %}
+  <p class="text-muted">Книги не найдены.</p>
+{% endif %}
+
+{% if current_user.is_authenticated and current_user.has_role('administrator') %}
+  <div class="mt-3">
+    <a href="{{ url_for('books.create') }}" class="btn btn-success">Добавить книгу</a>
+  </div>
+{% endif %}
+{% endblock %}
