@@ -13,7 +13,7 @@ class Config:
 
   SQLALCHEMY_DATABASE_URI = os.environ.get(
     "DATABASE_URL",
-    "postgresql://elibrary:elibrary_pass@localhost:5432/elibrary",
+    "sqlite:///" + str(BASE_DIR / "app.db")
   )
   SQLALCHEMY_TRACK_MODIFICATIONS = False
 
