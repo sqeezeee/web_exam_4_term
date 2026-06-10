@@ -6,7 +6,7 @@
 ## Стек
 
 - Python 3, Flask, SQLAlchemy
-- PostgreSQL 16 (Docker)
+- SQLite
 - Jinja2, Bootstrap 5, EasyMDE, Bleach, Markdown
 
 
