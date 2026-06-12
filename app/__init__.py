@@ -3,7 +3,7 @@ from pathlib import Path
 from flask import Flask
 
 from app.config import Config
-from app.extensions import db, login_manager, migrate
+from app.extensions import db, login_manager
 
 # Корень проекта — на уровень выше пакета app
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,7 +22,6 @@ def create_app(config_class=Config):
   app.config["UPLOAD_FOLDER"].mkdir(parents=True, exist_ok=True)
 
   db.init_app(app)
-  migrate.init_app(app, db)
   login_manager.init_app(app)
 
   from app.models import User

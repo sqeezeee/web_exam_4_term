@@ -28,8 +28,5 @@ instance/
 *.swo
 .DS_Store
 
-# Миграции (локальные артефакты)
-migrations/versions/__pycache__/
-
 # Логи
 *.log
