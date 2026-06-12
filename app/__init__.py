@@ -5,6 +5,9 @@ from flask import Flask
 from app.config import Config
 from app.extensions import db, login_manager
 
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
+
 # Корень проекта — на уровень выше пакета app
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -22,6 +25,13 @@ def create_app(config_class=Config):
   app.config["UPLOAD_FOLDER"].mkdir(parents=True, exist_ok=True)
 
   db.init_app(app)
+  # Принудительно включаем каскадное удаление для SQLite
+  if app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite"):
+      @event.listens_for(Engine, "connect")
+      def set_sqlite_pragma(dbapi_connection, connection_record):
+          cursor = dbapi_connection.cursor()
+          cursor.execute("PRAGMA foreign_keys=ON")
+          cursor.close()
   login_manager.init_app(app)
 
   from app.models import User
